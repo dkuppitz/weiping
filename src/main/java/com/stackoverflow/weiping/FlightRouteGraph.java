@@ -64,7 +64,8 @@ class FlightRouteGraph {
                             "duration", arrival - departure,
                             "overnight", flight.isOvernight(),
                             "dayOfWeek", dow,
-                            "destination", flight.getTo()); // denormalize destination to improve filter performance
+                            "origin", flight.getFrom(),     // denormalize origin and destination to
+                            "destination", flight.getTo()); // improve query/filter performance
 
                     fv.addEdge("from", graph.vertices(flight.getFrom()).next(),
                             "start", flight.getStartDate().toEpochDay(),
