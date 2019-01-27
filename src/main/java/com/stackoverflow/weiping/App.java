@@ -152,6 +152,9 @@ public class App {
         return traversal
                 .sack(Operator.assign)
                     .by("duration")
+                .group("m")
+                    .by("destination")
+                    .by(__.sack())
                 .choose(__.values("overnight"))
                     .option(false, __.constant(travelDate.toEpochDay()))
                     .option(true, __.constant(travelDate.toEpochDay() + 1)).as("date")
@@ -162,17 +165,42 @@ public class App {
                             .sack(Operator.sum)
                                 .by("layover")
                             .inV().as("flight")
-                            .filter(__.select(Pop.all, "flight")
-                                        .project("a", "b")
-                                            .by(__.count(Scope.local))
-                                            .by(__.unfold().values("origin").dedup().count())
-                                        .where("a", P.eq("b")))
                             .map(__.union(
                                     __.select(Pop.last, "date"),
                                     __.has("overnight", true).constant(1)).sum()).as("date")
                             .select(Pop.last, "flight")
                             .sack(Operator.sum)
-                                .by("duration"))
+                                .by("duration")
+                            // The next filter prevents the traversal from following routes that just hit an airport
+                            // that was already reached in a shorter travel time. The version for >= TP 3.4.0 is a lot
+                            // more efficient, but the old variant should still be worth it on larger graphs.
+                            // Also note, that this is another way to prevent cyclic paths.
+                            /* >= TP 3.4.0:
+                            .or(
+                                    __.not(__.select("m")
+                                                .select(__.select(Pop.last, "flight").by("destination"))),
+                                    __.select("m")
+                                            .select(__.select(Pop.last, "flight").by("destination"))
+                                            .project("a","b")
+                                                .by()
+                                                .by(__.sack())
+                                            .where("a", P.gte("b")))*/
+                            /* < TP 3.4.0: */
+                            .or(
+                                    __.not(__.values("destination").as("d")
+                                            .select("m").unfold().as("kv")
+                                            .select(Column.keys).where(P.eq("d"))),
+                                    __.values("destination").as("d")
+                                            .select("m").unfold().as("kv")
+                                            .select(Column.keys).where(P.eq("d"))
+                                            .select("kv")
+                                            .project("a","b")
+                                                .by(Column.values)
+                                                .by(__.sack())
+                                            .where("a", P.gte("b")))
+                            .group("m")
+                                .by("destination")
+                                .by(__.sack()))
                 .project("routes", "layovers", "time")
                     .by(__.select(Pop.all, "flight")
                             .by(__.unfold()
