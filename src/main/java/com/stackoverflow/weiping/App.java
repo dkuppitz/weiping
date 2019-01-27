@@ -176,28 +176,21 @@ public class App {
                             // more efficient, but the old variant should still be worth it on larger graphs.
                             // Also note, that this is another way to prevent cyclic paths.
                             /* >= TP 3.4.0:
-                            .or(
-                                    __.not(__.select("m")
-                                                .select(__.select(Pop.last, "flight").by("destination"))),
-                                    __.select("m")
-                                            .select(__.select(Pop.last, "flight").by("destination"))
-                                            .project("a","b")
-                                                .by()
-                                                .by(__.sack())
-                                            .where("a", P.gte("b")))*/
+                            .not(__.select("m")
+                                    .select(__.select(Pop.last, "flight").by("destination"))
+                                    .project("a","b")
+                                        .by()
+                                        .by(__.sack())
+                                    .where("a", P.gte("b")))*/
                             /* < TP 3.4.0: */
-                            .or(
-                                    __.not(__.values("destination").as("d")
-                                            .select("m").unfold().as("kv")
-                                            .select(Column.keys).where(P.eq("d"))),
-                                    __.values("destination").as("d")
-                                            .select("m").unfold().as("kv")
-                                            .select(Column.keys).where(P.eq("d"))
-                                            .select("kv")
-                                            .project("a","b")
-                                                .by(Column.values)
-                                                .by(__.sack())
-                                            .where("a", P.gte("b")))
+                            .not(__.values("destination").as("d")
+                                    .select("m").unfold().as("kv")
+                                    .select(Column.keys).where(P.eq("d"))
+                                    .select("kv")
+                                    .project("a","b")
+                                        .by(Column.values)
+                                        .by(__.sack())
+                                    .where("a", P.lt("b")))
                             .group("m")
                                 .by("destination")
                                 .by(__.sack()))
