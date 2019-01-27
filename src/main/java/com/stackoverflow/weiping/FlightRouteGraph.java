@@ -23,6 +23,7 @@ class FlightRouteGraph {
     private static Flight[] SAMPLE_FLIGHTS = new Flight[]{
             new Flight("HNL", "PDX", "AA", "100", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
             new Flight("HNL", "PDX", "AA", "201", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
+            new Flight("PDX", "HNL", "AA", "222", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
             new Flight("PDX", "LHR", "BA", "100", LocalDate.of(2019, 1, 31), LocalDate.of(2019, 3, 5), LocalTime.of(13, 30), LocalTime.of(23, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
             new Flight("PDX", "LHR", "BA", "201", LocalDate.of(2019, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(13, 30), LocalTime.of(23, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
             new Flight("PDX", "LHR", "BA", "202", LocalDate.of(2019, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(16, 0), LocalTime.of(2, 0), true, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),

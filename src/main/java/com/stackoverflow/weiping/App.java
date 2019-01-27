@@ -143,7 +143,6 @@ public class App {
                     .by("layover")
                 .limit(Scope.local, 1);
 
-        // todo: prevent cyclic paths
         return traversal
                 .sack(Operator.assign)
                     .by("duration")
@@ -157,6 +156,11 @@ public class App {
                             .sack(Operator.sum)
                                 .by("layover")
                             .inV().as("flight")
+                            .filter(__.select(Pop.all, "flight")
+                                        .project("a", "b")
+                                            .by(__.count(Scope.local))
+                                            .by(__.unfold().values("origin").dedup().count())
+                                        .where("a", P.eq("b")))
                             .sack(Operator.sum)
                                 .by("duration"))
                 .project("routes", "layovers", "time")
