@@ -94,11 +94,13 @@ class FlightRouteGraph {
                             .by("dayOfWeek")
                             .by("departure")
                             .by("duration"))
-                    .by(__.project("id", "dow", "dep", "dst")
+                    .by(__.project("id", "dow", "dep", "dst", "c", "fn")
                             .by(T.id)
                             .by("dayOfWeek")
                             .by("departure")
-                            .by("destination"))
+                            .by("destination")
+                            .by("carrier")
+                            .by("flightNumber"))
                     .by(__.project("start", "end")
                             .by("start")
                             .by("end"))
@@ -115,7 +117,8 @@ class FlightRouteGraph {
                             "start", ((Map) m.get("e")).get("start"),  // denormalize start, end, ...
                             "end", ((Map) m.get("e")).get("end"),
                             "layover", layoverTime,
-                            "destination", next.get("dst"));  // ... and destination to improve filter performance
+                            "destination", next.get("dst"), // ... destination and flight to improve filter performance
+                            "flight", String.join("-", (String) next.get("c"), (String) next.get("fn")));
         });
     }
 

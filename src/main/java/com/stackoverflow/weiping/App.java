@@ -143,7 +143,7 @@ public class App {
 
         connectionTraversal
                 .group()
-                    .by(__.inV().values("carrier", "flightNumber").fold())
+                    .by("flight")
                 .unfold().select(Column.values)
                 .order(Scope.local)
                     .by("layover")
@@ -159,7 +159,7 @@ public class App {
                     .option(false, __.constant(travelDate.toEpochDay()))
                     .option(true, __.constant(travelDate.toEpochDay() + 1)).as("date")
                 .select("flight")
-                .until(__.out("to").hasId(destination))
+                .until(__.has("destination", destination))
                     .repeat(__
                             .flatMap(connectionTraversal).as("connection")
                             .sack(Operator.sum)
