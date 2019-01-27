@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -208,7 +208,7 @@ public class App {
                                     .fold()))
                     .by(__.coalesce(__.select(Pop.all, "connection")
                                         .by(__.unfold().values("layover").fold()),
-                                    __.constant(new ArrayList<>())))
+                                    __.constant(Collections.emptyList())))
                     .by(__.sack().math("_/60"))
                 .order()
                     .by(__.select("time"));
