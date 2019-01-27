@@ -206,9 +206,8 @@ public class App {
                                         .by("overnight")
                                         .by("destination")
                                     .fold()))
-                    .by(__.coalesce(__.select(Pop.all, "connection")
-                                        .by(__.unfold().values("layover").fold()),
-                                    __.constant(Collections.emptyList())))
+                    .by(__.select(Pop.all, "connection")
+                            .unfold().values("layover").fold())
                     .by(__.sack().math("_/60"))
                 .order()
                     .by(__.select("time"));
