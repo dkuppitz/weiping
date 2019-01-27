@@ -23,11 +23,10 @@ class FlightRouteGraph {
     private static Flight[] SAMPLE_FLIGHTS = new Flight[]{
             new Flight("HNL", "PDX", "AA", "100", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
             new Flight("HNL", "PDX", "AA", "201", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
-            new Flight("PDX", "HNL", "AA", "222", LocalDate.of(2019, 1, 23), LocalDate.of(2019, 3, 20), LocalTime.of(8, 0), LocalTime.of(13, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
             new Flight("PDX", "LHR", "BA", "100", LocalDate.of(2019, 1, 31), LocalDate.of(2019, 3, 5), LocalTime.of(13, 30), LocalTime.of(23, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
-            new Flight("PDX", "LHR", "BA", "201", LocalDate.of(2019, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(13, 30), LocalTime.of(23, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
-            new Flight("PDX", "LHR", "BA", "202", LocalDate.of(2019, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(16, 0), LocalTime.of(2, 0), true, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
-            new Flight("PDX", "LHR", "BA", "203", LocalDate.of(2019, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(16, 0), LocalTime.of(2, 0), true, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
+            new Flight("PDX", "LHR", "BA", "201", LocalDate.of(2018, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(13, 30), LocalTime.of(23, 0), false, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
+            new Flight("PDX", "LHR", "BA", "202", LocalDate.of(2018, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(16, 0), LocalTime.of(2, 0), true, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY),
+            new Flight("PDX", "LHR", "BA", "203", LocalDate.of(2018, 2, 5), LocalDate.of(2019, 3, 17), LocalTime.of(16, 0), LocalTime.of(2, 0), true, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
             new Flight("ORD", "PDX", "CC", "66", LocalDate.of(2019, 8, 11), LocalDate.of(2019, 12, 11), LocalTime.of(6, 0), LocalTime.of(12, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
             new Flight("ORD", "LAX", "CC", "76", LocalDate.of(2019, 8, 11), LocalDate.of(2019, 12, 11), LocalTime.of(6, 0), LocalTime.of(12, 0), false, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
             new Flight("LAX", "CAN", "CC", "12", LocalDate.of(2019, 3, 11), LocalDate.of(2019, 12, 24), LocalTime.of(15, 0), LocalTime.of(5, 0), true, DayOfWeek.TUESDAY, DayOfWeek.SATURDAY),
@@ -87,19 +86,22 @@ class FlightRouteGraph {
 
         final GraphTraversalSource g = graph.traversal();
 
-        g.V().hasLabel("flight")
-                .match(__.as("previousFlight").out("to").in("from").as("nextFlight"))
-                .select("previousFlight","nextFlight")
+        g.V().hasLabel("flight").as("previousFlight")
+                .out("to").inE("from").as("e").outV().as("nextFlight")
+                .select("previousFlight","nextFlight", "e")
                     .by(__.project("id","dow", "dep", "dur")
                             .by(T.id)
                             .by("dayOfWeek")
                             .by("departure")
                             .by("duration"))
-                .by(__.project("id", "dow", "dep", "dst")
-                        .by(T.id)
-                        .by("dayOfWeek")
-                        .by("departure")
-                        .by("destination"))
+                    .by(__.project("id", "dow", "dep", "dst")
+                            .by(T.id)
+                            .by("dayOfWeek")
+                            .by("departure")
+                            .by("destination"))
+                    .by(__.project("start", "end")
+                            .by("start")
+                            .by("end"))
                 .forEachRemaining(m -> {
 
             final Map prev = (Map) m.get("previousFlight");
@@ -110,8 +112,10 @@ class FlightRouteGraph {
 
             graph.vertices(prev.get("id")).next()
                     .addEdge("next", graph.vertices(next.get("id")).next(),
+                            "start", ((Map) m.get("e")).get("start"),  // denormalize start, end, ...
+                            "end", ((Map) m.get("e")).get("end"),
                             "layover", layoverTime,
-                            "destination", next.get("dst"));  // denormalize destination to improve filter performance
+                            "destination", next.get("dst"));  // ... and destination to improve filter performance
         });
     }
 

@@ -127,7 +127,13 @@ public class App {
                 .outV().as("flight");
 
         final GraphTraversal connectionTraversal =
-                __.outE("next").has("layover", P.gte(minLayover));
+                __.outE("next").has("layover", P.gte(minLayover))
+                        .filter(__
+                                .project("start", "end", "date")
+                                    .by("start")
+                                    .by("end")
+                                    .by(__.select(Pop.last, "date"))
+                                .where("date", P.gte("start").and(P.lte("end"))));
 
         if (layoverAirports.length > 0) {
             final P layoverFilter = P.eq(destination).or(P.within(layoverAirports));
@@ -148,7 +154,7 @@ public class App {
                     .by("duration")
                 .choose(__.values("overnight"))
                     .option(false, __.constant(travelDate.toEpochDay()))
-                    .option(true, __.constant(travelDate.toEpochDay() + 1)).as("date") // todo: track date and compare with service date
+                    .option(true, __.constant(travelDate.toEpochDay() + 1)).as("date")
                 .select("flight")
                 .until(__.out("to").hasId(destination))
                     .repeat(__
@@ -161,6 +167,10 @@ public class App {
                                             .by(__.count(Scope.local))
                                             .by(__.unfold().values("origin").dedup().count())
                                         .where("a", P.eq("b")))
+                            .map(__.union(
+                                    __.select(Pop.last, "date"),
+                                    __.has("overnight", true).constant(1)).sum()).as("date")
+                            .select(Pop.last, "flight")
                             .sack(Operator.sum)
                                 .by("duration"))
                 .project("routes", "layovers", "time")
